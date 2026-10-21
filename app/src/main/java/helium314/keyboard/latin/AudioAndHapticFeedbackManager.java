@@ -7,7 +7,9 @@
 package helium314.keyboard.latin;
 
 import android.content.Context;
+import android.media.AudioAttributes;
 import android.media.AudioManager;
+import android.media.SoundPool;
 import android.os.Vibrator;
 import android.view.HapticFeedbackConstants;
 import android.view.View;
@@ -15,6 +17,9 @@ import android.view.View;
 import helium314.keyboard.event.HapticEvent;
 import helium314.keyboard.keyboard.internal.keyboard_parser.floris.KeyCode;
 import helium314.keyboard.latin.common.Constants;
+import helium314.keyboard.latin.settings.Defaults;
+import helium314.keyboard.latin.settings.Settings;
+import helium314.keyboard.latin.utils.KtxKt;
 import helium314.keyboard.latin.settings.SettingsValues;
 
 /**
@@ -49,6 +54,62 @@ public final class AudioAndHapticFeedbackManager {
     private void initInternal(final Context context) {
         mAudioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
         mVibrator = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
+        mContext = context.getApplicationContext();
+    }
+
+    // Sans Keyboard: physical keyboard sounds played with a SoundPool
+    private Context mContext;
+    private SoundPool mSoundPool;
+    private String mLoadedPack;
+    private int[] mKeySounds = new int[0];
+    private int mSpaceSound, mEnterSound, mDeleteSound;
+    private final java.util.Random mRandom = new java.util.Random();
+
+    private String soundPack() {
+        if (mContext == null) return "system";
+        return KtxKt.prefs(mContext).getString(Settings.PREF_SANS_KEY_SOUND, Defaults.PREF_SANS_KEY_SOUND);
+    }
+
+    private void loadPack(final String pack) {
+        if (pack.equals(mLoadedPack)) return;
+        if (mSoundPool != null) { mSoundPool.release(); mSoundPool = null; }
+        mLoadedPack = pack;
+        if ("system".equals(pack) || mContext == null) return;
+        mSoundPool = new SoundPool.Builder()
+                .setMaxStreams(6)
+                .setAudioAttributes(new AudioAttributes.Builder()
+                        .setUsage(AudioAttributes.USAGE_ASSISTANCE_SONIFICATION)
+                        .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                        .build())
+                .build();
+        final boolean thock = "thock".equals(pack);
+        mKeySounds = new int[] {
+                mSoundPool.load(mContext, thock ? R.raw.sans_thock_key1 : R.raw.sans_mech_key1, 1),
+                mSoundPool.load(mContext, thock ? R.raw.sans_thock_key2 : R.raw.sans_mech_key2, 1),
+                mSoundPool.load(mContext, thock ? R.raw.sans_thock_key3 : R.raw.sans_mech_key3, 1),
+        };
+        mSpaceSound = mSoundPool.load(mContext, thock ? R.raw.sans_thock_space : R.raw.sans_mech_space, 1);
+        mEnterSound = mSoundPool.load(mContext, thock ? R.raw.sans_thock_enter : R.raw.sans_mech_enter, 1);
+        mDeleteSound = mSoundPool.load(mContext, thock ? R.raw.sans_thock_delete : R.raw.sans_mech_delete, 1);
+    }
+
+    /** returns false if the system sound should be used instead */
+    private boolean playPackSound(final int code) {
+        final String pack = soundPack();
+        loadPack(pack);
+        if (mSoundPool == null) return false;
+        final int id = switch (code) {
+            case KeyCode.DELETE -> mDeleteSound;
+            case Constants.CODE_ENTER -> mEnterSound;
+            case Constants.CODE_SPACE -> mSpaceSound;
+            default -> mKeySounds[mRandom.nextInt(mKeySounds.length)];
+        };
+        final float setVolume = mSettingsValues.mKeypressSoundVolume;
+        final float volume = setVolume < 0 ? 0.6f : setVolume;
+        // a slightly different pitch every time, so fast typing does not sound like a machine gun
+        final float rate = 0.96f + mRandom.nextFloat() * 0.08f;
+        mSoundPool.play(id, volume, volume, 1, 0, rate);
+        return true;
     }
 
     public void performHapticAndAudioFeedback(
@@ -89,6 +150,7 @@ public final class AudioAndHapticFeedbackManager {
         if (hapticEvent != HapticEvent.KEY_PRESS) {
             return;
         }
+        if (playPackSound(code)) return;
         final int sound = switch (code) {
             case KeyCode.DELETE -> AudioManager.FX_KEYPRESS_DELETE;
             case Constants.CODE_ENTER -> AudioManager.FX_KEYPRESS_RETURN;

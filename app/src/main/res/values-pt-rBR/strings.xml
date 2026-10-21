@@ -567,4 +567,9 @@
     <string name="sans_glass_frosted">Vidro fosco (app desfocado atrás)</string>
     <string name="sans_glass_clear">Transparente (app visível atrás)</string>
     <string name="sans_glass_off">Desligado (fundo sólido)</string>
+    <string name="sans_glass_smoky">Vidro esfumaçado (painel fosco, teclas cinza)</string>
+    <string name="sans_key_sound">Som das teclas</string>
+    <string name="sans_key_sound_mech">Teclado mecânico (clique)</string>
+    <string name="sans_key_sound_thock">Teclado mecânico (abafado)</string>
+    <string name="sans_key_sound_system">Som do sistema</string>
 </resources>

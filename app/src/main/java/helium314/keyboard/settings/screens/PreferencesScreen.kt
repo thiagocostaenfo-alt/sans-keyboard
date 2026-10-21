@@ -59,6 +59,8 @@ fun PreferencesScreen(
             Settings.PREF_VIBRATE_IN_DND_MODE else null,
         Settings.PREF_SOUND_ON,
         if (prefs.getBoolean(Settings.PREF_SOUND_ON, Defaults.PREF_SOUND_ON))
+            Settings.PREF_SANS_KEY_SOUND else null,
+        if (prefs.getBoolean(Settings.PREF_SOUND_ON, Defaults.PREF_SOUND_ON))
             Settings.PREF_KEYPRESS_SOUND_VOLUME else null,
         Settings.PREF_SAVE_SUBTYPE_PER_APP,
         Settings.PREF_SHOW_EMOJI_DESCRIPTIONS,
@@ -124,6 +126,18 @@ fun createPreferencesSettings(context: Context) = listOf(
     },
     Setting(context, Settings.PREF_SOUND_ON, R.string.sound_on_keypress) {
         SwitchPreference(it, Defaults.PREF_SOUND_ON)
+    },
+    Setting(context, Settings.PREF_SANS_KEY_SOUND, R.string.sans_key_sound) { setting ->
+        val ctx = LocalContext.current
+        ListPreference(
+            setting,
+            listOf(
+                ctx.getString(R.string.sans_key_sound_mech) to "mech",
+                ctx.getString(R.string.sans_key_sound_thock) to "thock",
+                ctx.getString(R.string.sans_key_sound_system) to "system",
+            ),
+            Defaults.PREF_SANS_KEY_SOUND
+        )
     },
     Setting(context, Settings.PREF_SHOW_EMOJI_DESCRIPTIONS, R.string.show_emoji_descriptions) {
         SwitchPreferenceWithEmojiDictWarning(it, Defaults.PREF_SHOW_EMOJI_DESCRIPTIONS)

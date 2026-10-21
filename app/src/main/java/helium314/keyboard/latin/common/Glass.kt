@@ -36,6 +36,8 @@ import helium314.keyboard.latin.settings.Settings
 object Glass {
     const val MODE_FROSTED = "frosted"
     const val MODE_CLEAR = "clear"
+    /** smoky gray keys on a frosted panel with rounded corners and toolbar buttons in circles */
+    const val MODE_SMOKY = "smoky"
     const val MODE_OFF = "off"
 
     private const val BLUR_RADIUS_DP = 28
@@ -53,13 +55,21 @@ object Glass {
         } catch (_: Exception) { false }
     }
 
-    fun wantsBlur(context: Context, prefs: SharedPreferences) = mode(prefs) == MODE_FROSTED && blurAvailable(context)
+    fun wantsBlur(context: Context, prefs: SharedPreferences) =
+        (mode(prefs) == MODE_FROSTED || mode(prefs) == MODE_SMOKY) && blurAvailable(context)
+
+    fun panelRadius(context: Context) = 28f * context.resources.displayMetrics.density
 
     @JvmStatic
     fun apply(context: Context, prefs: SharedPreferences, base: Colors): Colors {
         if (!isEnabled(prefs)) return base
         // the frosted look only needs a light veil; without blur the app behind must be toned down more
-        val veil = if (wantsBlur(context, prefs)) 0x47000000 else 0x8C000000.toInt()
+        val blur = wantsBlur(context, prefs)
+        if (mode(prefs) == MODE_SMOKY) {
+            val veil = if (blur) 0x8C141416.toInt() else 0xD9141416.toInt()
+            return GlassColors(base, veil, smoky = true, panelRadius = panelRadius(context), density = context.resources.displayMetrics.density)
+        }
+        val veil = if (blur) 0x47000000 else 0x8C000000.toInt()
         return GlassColors(base, veil)
     }
 
@@ -76,7 +86,12 @@ object Glass {
             return false
         }
         window.setFormat(PixelFormat.TRANSLUCENT)
-        window.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        // a rounded (transparent) window background also rounds the corners of the blur
+        window.setBackgroundDrawable(
+            if (mode(prefs) == MODE_SMOKY) android.graphics.drawable.GradientDrawable().apply {
+                setColor(Color.TRANSPARENT); cornerRadius = panelRadius(ims)
+            } else ColorDrawable(Color.TRANSPARENT)
+        )
         val blur = !floatingOrFullscreen && wantsBlur(ims, prefs)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             val px = if (blur) (BLUR_RADIUS_DP * ims.resources.displayMetrics.density).toInt() else 0
@@ -88,7 +103,13 @@ object Glass {
 }
 
 /** wraps the theme colors: glass keys, see-through backgrounds, everything else unchanged */
-class GlassColors(private val base: Colors, @ColorInt private val veil: Int) : Colors {
+class GlassColors(
+    private val base: Colors,
+    @ColorInt private val veil: Int,
+    private val smoky: Boolean = false,
+    private val panelRadius: Float = 0f,
+    private val density: Float = 1f,
+) : Colors {
     override val themeStyle: String get() = base.themeStyle
     override val hasKeyBorders: Boolean get() = true
 
@@ -99,32 +120,47 @@ class GlassColors(private val base: Colors, @ColorInt private val veil: Int) : C
 
     override fun haveColorsChanged(context: Context) = base.haveColorsChanged(context)
 
-    override fun get(color: ColorType): Int = when (color) {
-        MAIN_BACKGROUND, NAVIGATION_BAR -> veil
-        STRIP_BACKGROUND -> Color.TRANSPARENT
-        else -> base.get(color)
-    }
-
     override fun selectAndColorDrawable(attr: TypedArray, color: ColorType): Drawable = when (color) {
         KEY_BACKGROUND, FUNCTIONAL_KEY_BACKGROUND, SPACE_BAR_BACKGROUND ->
-            GlassKeyDrawable(null, base.get(ACTION_KEY_BACKGROUND))
-        ACTION_KEY_BACKGROUND -> GlassKeyDrawable(base.get(ACTION_KEY_BACKGROUND), base.get(ACTION_KEY_BACKGROUND))
+            if (smoky) SmokyKeyDrawable(base.get(ACTION_KEY_BACKGROUND)) else GlassKeyDrawable(null, base.get(ACTION_KEY_BACKGROUND))
+        // smoky: the action key looks like the others, only its icon takes the accent color
+        ACTION_KEY_BACKGROUND -> if (smoky) SmokyKeyDrawable(base.get(ACTION_KEY_BACKGROUND))
+            else GlassKeyDrawable(base.get(ACTION_KEY_BACKGROUND), base.get(ACTION_KEY_BACKGROUND))
         else -> base.selectAndColorDrawable(attr, color) // popups stay solid so they are easy to read
     }
 
     override fun setColor(drawable: Drawable, color: ColorType) {
+        if (smoky && color == ACTION_KEY_ICON) { drawable.colorFilter = accentIconFilter; return }
         if (color == STRIP_BACKGROUND) {
             DrawableCompat.setTintMode(drawable, PorterDuff.Mode.MULTIPLY)
             DrawableCompat.setTintList(drawable, stripStateList)
         } else base.setColor(drawable, color)
     }
 
-    override fun setColor(view: ImageView, color: ColorType) = base.setColor(view, color)
+    override fun get(color: ColorType): Int = when (color) {
+        MAIN_BACKGROUND, NAVIGATION_BAR -> veil
+        STRIP_BACKGROUND -> Color.TRANSPARENT
+        ACTION_KEY_ICON -> if (smoky) base.get(ACTION_KEY_BACKGROUND) else base.get(color)
+        else -> base.get(color)
+    }
+
+    override fun setColor(view: ImageView, color: ColorType) {
+        if (smoky && color == ACTION_KEY_ICON) view.colorFilter = accentIconFilter
+        else base.setColor(view, color)
+    }
+
+    private val accentIconFilter: ColorFilter = android.graphics.PorterDuffColorFilter(base.get(ACTION_KEY_BACKGROUND), PorterDuff.Mode.SRC_IN)
 
     override fun setBackground(view: View, color: ColorType) {
         when (color) {
-            MAIN_BACKGROUND -> view.background = ColorDrawable(veil)
-            STRIP_BACKGROUND -> {
+            MAIN_BACKGROUND -> view.background = if (smoky) android.graphics.drawable.GradientDrawable().apply {
+                setColor(veil)
+                cornerRadius = panelRadius
+                setStroke((1f * density).toInt().coerceAtLeast(1), 0x50E6E6EB)
+            } else ColorDrawable(veil)
+            STRIP_BACKGROUND -> if (smoky && view is ImageView) {
+                view.background = ToolbarCircleDrawable(base.get(ACTION_KEY_BACKGROUND), density)
+            } else {
                 if (view.background == null) view.setBackgroundColor(Color.WHITE)
                 setColor(view.background, color)
             }
@@ -204,6 +240,105 @@ class GlassKeyDrawable(@ColorInt private val accent: Int?, @ColorInt private val
     // used when a theme keeps the background aspect ratio (action / emoji key without key borders)
     override fun getIntrinsicWidth() = (56 * android.content.res.Resources.getSystem().displayMetrics.density).toInt()
     override fun getIntrinsicHeight() = (44 * android.content.res.Resources.getSystem().displayMetrics.density).toInt()
+
+    override fun setAlpha(alpha: Int) = Unit
+    override fun setColorFilter(colorFilter: ColorFilter?) = Unit
+    @Deprecated("Deprecated in Java")
+    override fun getOpacity() = PixelFormat.TRANSLUCENT
+}
+
+/**
+ * Smoky key: dark gray, a bit lighter at the top, thin light edge. Pressed keys glow in the accent color.
+ */
+class SmokyKeyDrawable(@ColorInt private val accent: Int) : Drawable() {
+    private val density = android.content.res.Resources.getSystem().displayMetrics.density
+    private val fill = Paint(Paint.ANTI_ALIAS_FLAG)
+    private val rim = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeWidth = 1f * density }
+    private val glow = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.STROKE
+        strokeWidth = 3f * density
+        color = accent
+        maskFilter = android.graphics.BlurMaskFilter(3.5f * density, android.graphics.BlurMaskFilter.Blur.NORMAL)
+    }
+    private val rect = RectF()
+    private var pressed = false
+    private var shaderHeight = -1
+    private var shaderPressed = false
+
+    override fun isStateful() = true
+
+    override fun onStateChange(state: IntArray): Boolean {
+        val p = state.contains(android.R.attr.state_pressed)
+        if (p == pressed) return false
+        pressed = p
+        return true
+    }
+
+    override fun draw(canvas: Canvas) {
+        val b = bounds
+        if (b.width() <= 0 || b.height() <= 0) return
+        if (shaderHeight != b.height() || shaderPressed != pressed) updateShaders(b.top.toFloat(), b.height().toFloat())
+        // the inset leaves room for the glow inside the key's own area, so neighbours never cover it
+        val inset = 3.5f * density
+        rect.set(b.left + inset, b.top + inset, b.right - inset, b.bottom - inset)
+        val r = minOf(rect.width(), rect.height()) * 0.28f
+        if (pressed) canvas.drawRoundRect(rect, r, r, glow)
+        canvas.drawRoundRect(rect, r, r, fill)
+        val half = rim.strokeWidth / 2f
+        rect.inset(half, half)
+        canvas.drawRoundRect(rect, r - half, r - half, rim)
+    }
+
+    private fun updateShaders(top: Float, h: Float) {
+        shaderHeight = h.toInt()
+        shaderPressed = pressed
+        val bottom = top + h
+        fill.shader = if (pressed) {
+            LinearGradient(0f, top, 0f, bottom,
+                ColorUtils.setAlphaComponent(ColorUtils.blendARGB(accent, Color.WHITE, 0.2f), 0xE6),
+                ColorUtils.setAlphaComponent(accent, 0xCC), Shader.TileMode.CLAMP)
+        } else {
+            LinearGradient(0f, top, 0f, bottom, 0xB8434346.toInt(), 0xB81E1E20.toInt(), Shader.TileMode.CLAMP)
+        }
+        rim.shader = if (pressed) {
+            LinearGradient(0f, top, 0f, bottom, ColorUtils.blendARGB(accent, Color.WHITE, 0.6f), accent, Shader.TileMode.CLAMP)
+        } else {
+            LinearGradient(0f, top, 0f, bottom, 0x5AFFFFFF, 0x14FFFFFF, Shader.TileMode.CLAMP)
+        }
+    }
+
+    override fun getIntrinsicWidth() = (56 * density).toInt()
+    override fun getIntrinsicHeight() = (44 * density).toInt()
+    override fun setAlpha(alpha: Int) = Unit
+    override fun setColorFilter(colorFilter: ColorFilter?) = Unit
+    @Deprecated("Deprecated in Java")
+    override fun getOpacity() = PixelFormat.TRANSLUCENT
+}
+
+/** round smoky button behind toolbar icons, lights up in the accent color when pressed or active */
+class ToolbarCircleDrawable(@ColorInt private val accent: Int, private val density: Float) : Drawable() {
+    private val fill = Paint(Paint.ANTI_ALIAS_FLAG)
+    private val ring = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeWidth = 1f * density }
+    private var highlighted = false
+
+    override fun isStateful() = true
+
+    override fun onStateChange(state: IntArray): Boolean {
+        val h = state.contains(android.R.attr.state_pressed) || state.contains(android.R.attr.state_activated)
+        if (h == highlighted) return false
+        highlighted = h
+        return true
+    }
+
+    override fun draw(canvas: Canvas) {
+        val b = bounds
+        val radius = minOf(b.width(), b.height()) / 2f - 4f * density
+        if (radius <= 0) return
+        fill.color = if (highlighted) ColorUtils.setAlphaComponent(accent, 0xCC) else 0xB028282A.toInt()
+        ring.color = if (highlighted) accent else 0x46FFFFFF
+        canvas.drawCircle(b.exactCenterX(), b.exactCenterY(), radius, fill)
+        canvas.drawCircle(b.exactCenterX(), b.exactCenterY(), radius - ring.strokeWidth / 2f, ring)
+    }
 
     override fun setAlpha(alpha: Int) = Unit
     override fun setColorFilter(colorFilter: ColorFilter?) = Unit

@@ -51,7 +51,8 @@ object Defaults {
     const val PREF_ACCENT_SHIFTED_ICON = true
     const val PREF_SANS_ADAPTIVE_ACCENT = true
     const val PREF_SANS_APP_ACCENT_OVERRIDES = ""
-    const val PREF_SANS_GLASS = "frosted"
+    const val PREF_SANS_GLASS = "smoky"
+    const val PREF_SANS_KEY_SOUND = "mech"
     const val PREF_THEME_COLORS = KeyboardTheme.THEME_SANS_LIGHT
     const val PREF_THEME_COLORS_NIGHT = KeyboardTheme.THEME_SANS_DARK
     const val PREF_THEME_KEY_BORDERS = true
@@ -62,7 +63,7 @@ object Defaults {
     const val PREF_AUTO_CAP = true
     const val PREF_VIBRATE_ON = false
     const val PREF_VIBRATE_IN_DND_MODE = false
-    const val PREF_SOUND_ON = false
+    const val PREF_SOUND_ON = true
     const val PREF_SUGGEST_EMOJIS = true
     const val PREF_INLINE_EMOJI_SEARCH = true
     const val PREF_SHOW_EMOJI_DESCRIPTIONS = true

@@ -1334,4 +1334,9 @@ New dictionary:
     <string name="sans_glass_frosted">Frosted glass (app blurred behind)</string>
     <string name="sans_glass_clear">Clear (app visible behind)</string>
     <string name="sans_glass_off">Off (solid background)</string>
+    <string name="sans_glass_smoky">Smoky glass (frosted panel, gray keys)</string>
+    <string name="sans_key_sound">Key sound</string>
+    <string name="sans_key_sound_mech">Mechanical keyboard (clicky)</string>
+    <string name="sans_key_sound_thock">Mechanical keyboard (soft, thocky)</string>
+    <string name="sans_key_sound_system">System sound</string>
 </resources>

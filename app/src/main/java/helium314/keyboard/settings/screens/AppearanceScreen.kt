@@ -151,6 +151,7 @@ fun createAppearanceSettings(context: Context) = listOf(
         ListPreference(
             setting,
             listOf(
+                ctx.getString(R.string.sans_glass_smoky) to Glass.MODE_SMOKY,
                 ctx.getString(R.string.sans_glass_frosted) to Glass.MODE_FROSTED,
                 ctx.getString(R.string.sans_glass_clear) to Glass.MODE_CLEAR,
                 ctx.getString(R.string.sans_glass_off) to Glass.MODE_OFF,
