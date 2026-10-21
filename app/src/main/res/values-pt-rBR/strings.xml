@@ -563,4 +563,8 @@
     <string name="sans_app_accent_overrides_summary">Escolha você mesmo a cor de apps específicos</string>
     <string name="sans_pick_app">Escolha um app</string>
     <string name="sans_custom_color_marker">cor personalizada</string>
+    <string name="sans_glass">Teclas de vidro</string>
+    <string name="sans_glass_frosted">Vidro fosco (app desfocado atrás)</string>
+    <string name="sans_glass_clear">Transparente (app visível atrás)</string>
+    <string name="sans_glass_off">Desligado (fundo sólido)</string>
 </resources>

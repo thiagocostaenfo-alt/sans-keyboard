@@ -1,5 +1,7 @@
 package helium314.keyboard.latin.utils
 
+import helium314.keyboard.latin.common.Glass
+import helium314.keyboard.latin.settings.Settings
 import android.R
 import android.annotation.SuppressLint
 import android.content.Context
@@ -123,14 +125,16 @@ fun Context.getDisplayContext(): Context {
 /** Override layout parameters to expand SoftInputWindow to the entire screen, See setInputView and SoftInputWindow.updateWidthHeight */
 fun InputMethodService.updateSoftInputWindowLayoutParameters(inputView: View?) {
     val window = window.window ?: return
-    ViewLayoutUtils.updateLayoutHeightOf(window, ViewGroup.LayoutParams.MATCH_PARENT)
+    // Sans Keyboard: with the frosted glass look the window only covers the keyboard, since the blur covers the whole window
+    val wrapForBlur = Glass.applyToWindow(this, prefs(), isFullscreenMode || Settings.getValues().mIsFloatingKeyboard)
+    ViewLayoutUtils.updateLayoutHeightOf(window, if (wrapForBlur) ViewGroup.LayoutParams.WRAP_CONTENT else ViewGroup.LayoutParams.MATCH_PARENT)
 
     if (inputView == null) return
     // In non-fullscreen mode, InputView and its parent inputArea should expand to the entire screen
     // and be placed at the bottom of SoftInputWindow. In fullscreen mode, these shouldn't
     // expand to the entire screen and should be coexistent with mExtractedArea above.
     // See setInputView and com.android.internal.R.layout.input_method.xml.
-    val layoutHeight = if (isFullscreenMode)
+    val layoutHeight = if (isFullscreenMode || wrapForBlur)
         ViewGroup.LayoutParams.WRAP_CONTENT
     else
         ViewGroup.LayoutParams.MATCH_PARENT

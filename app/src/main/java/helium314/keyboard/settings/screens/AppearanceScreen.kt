@@ -41,6 +41,7 @@ import helium314.keyboard.settings.preferences.CustomFontPreference
 import helium314.keyboard.settings.preferences.KeyboardScalePreference
 import helium314.keyboard.settings.preferences.TextInputPreference
 import helium314.keyboard.settings.preferences.AppAccentOverridesPreference
+import helium314.keyboard.latin.common.Glass
 import helium314.keyboard.latin.utils.previewDark
 import androidx.core.content.edit
 import helium314.keyboard.latin.settings.Settings
@@ -61,6 +62,7 @@ fun AppearanceScreen(
         R.string.settings_screen_theme,
         Settings.PREF_THEME_STYLE,
         Settings.PREF_ICON_STYLE,
+        Settings.PREF_SANS_GLASS,
         Settings.PREF_SANS_ADAPTIVE_ACCENT,
         if (prefs.getBoolean(Settings.PREF_SANS_ADAPTIVE_ACCENT, Defaults.PREF_SANS_ADAPTIVE_ACCENT))
             Settings.PREF_SANS_APP_ACCENT_OVERRIDES else null,
@@ -143,6 +145,18 @@ fun createAppearanceSettings(context: Context) = listOf(
             KeyboardIconsSet.needsReload = true // only relevant for Settings.PREF_CUSTOM_ICON_NAMES
             KeyboardSwitcher.getInstance().setThemeNeedsReload()
         }
+    },
+    Setting(context, Settings.PREF_SANS_GLASS, R.string.sans_glass) { setting ->
+        val ctx = LocalContext.current
+        ListPreference(
+            setting,
+            listOf(
+                ctx.getString(R.string.sans_glass_frosted) to Glass.MODE_FROSTED,
+                ctx.getString(R.string.sans_glass_clear) to Glass.MODE_CLEAR,
+                ctx.getString(R.string.sans_glass_off) to Glass.MODE_OFF,
+            ),
+            Defaults.PREF_SANS_GLASS
+        ) { KeyboardSwitcher.getInstance().setThemeNeedsReload() }
     },
     Setting(context, Settings.PREF_SANS_ADAPTIVE_ACCENT, R.string.sans_adaptive_accent, R.string.sans_adaptive_accent_summary) {
         SwitchPreference(it, Defaults.PREF_SANS_ADAPTIVE_ACCENT) { KeyboardSwitcher.getInstance().setThemeNeedsReload() }

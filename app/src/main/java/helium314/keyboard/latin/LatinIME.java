@@ -56,6 +56,7 @@ import helium314.keyboard.keyboard.KeyboardSwitcher;
 import helium314.keyboard.keyboard.MainKeyboardView;
 import helium314.keyboard.latin.SuggestedWords.SuggestedWordInfo;
 import helium314.keyboard.latin.common.AppAccent;
+import helium314.keyboard.latin.common.Glass;
 import helium314.keyboard.latin.common.ColorType;
 import helium314.keyboard.latin.common.Constants;
 import helium314.keyboard.latin.common.CoordinateUtils;
@@ -1773,7 +1774,8 @@ public class LatinIME extends InputMethodService implements
     @SuppressWarnings("deprecation")
     private void setNavigationBarColor() {
         final SettingsValues settingsValues = mSettings.getCurrent();
-        if (!settingsValues.mCustomNavBarColor)
+        final boolean glass = Glass.INSTANCE.isEnabled(KtxKt.prefs(this));
+        if (!settingsValues.mCustomNavBarColor && !glass)
             return;
         final int color = settingsValues.mColors.get(ColorType.NAVIGATION_BAR);
         final Window window = getWindow().getWindow();
@@ -1796,7 +1798,7 @@ public class LatinIME extends InputMethodService implements
     @SuppressWarnings("deprecation")
     private void clearNavigationBarColor() {
         final SettingsValues settingsValues = mSettings.getCurrent();
-        if (!settingsValues.mCustomNavBarColor)
+        if (!settingsValues.mCustomNavBarColor && !Glass.INSTANCE.isEnabled(KtxKt.prefs(this)))
             return;
         final Window window = getWindow().getWindow();
         if (window == null) {

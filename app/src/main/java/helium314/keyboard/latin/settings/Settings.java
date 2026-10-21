@@ -59,6 +59,7 @@ public final class Settings implements SharedPreferences.OnSharedPreferenceChang
     public static final String PREF_ACCENT_SHIFTED_ICON = "accent_shifted_icon";
     public static final String PREF_SANS_ADAPTIVE_ACCENT = "sans_adaptive_accent";
     public static final String PREF_SANS_APP_ACCENT_OVERRIDES = "sans_app_accent_overrides";
+    public static final String PREF_SANS_GLASS = "sans_glass";
     public static final String PREF_THEME_COLORS = "theme_colors";
     public static final String PREF_THEME_COLORS_NIGHT = "theme_colors_night";
     public static final String PREF_THEME_KEY_BORDERS = "theme_key_borders";

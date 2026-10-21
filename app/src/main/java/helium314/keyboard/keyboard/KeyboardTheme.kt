@@ -19,6 +19,8 @@ import helium314.keyboard.latin.common.AllColors
 import helium314.keyboard.latin.common.ColorType
 import helium314.keyboard.latin.common.Colors
 import helium314.keyboard.latin.common.AppAccent
+import helium314.keyboard.latin.common.Glass
+import helium314.keyboard.latin.utils.isBrightColor
 import helium314.keyboard.latin.common.DefaultColors
 import helium314.keyboard.latin.common.DynamicColors
 import helium314.keyboard.latin.settings.Defaults
@@ -146,8 +148,13 @@ private constructor(val themeId: Int, @JvmField val mStyleId: Int) {
                 prefs.getString(Settings.PREF_THEME_COLORS, Defaults.PREF_THEME_COLORS)
             val themeStyle = prefs.getString(Settings.PREF_THEME_STYLE, Defaults.PREF_THEME_STYLE)
 
-            val base = getThemeColors(themeName!!, themeStyle!!, context, prefs, isNight)
-            return AppAccent.apply(context, prefs, base, isNight)
+            val glass = Glass.isEnabled(prefs)
+            var base = getThemeColors(themeName!!, themeStyle!!, context, prefs, isNight)
+            // glass keys are dark, so a theme with dark text is swapped for the dark Sans theme
+            if (glass && !isBrightColor(base.get(ColorType.KEY_TEXT)))
+                base = getThemeColors(THEME_SANS_DARK, themeStyle, context, prefs, true)
+            val accented = AppAccent.apply(context, prefs, base, isNight || glass)
+            return Glass.apply(context, prefs, accented)
         }
 
         private fun getThemeColors(themeName: String, themeStyle: String, context: Context, prefs: SharedPreferences, isNight: Boolean): Colors {

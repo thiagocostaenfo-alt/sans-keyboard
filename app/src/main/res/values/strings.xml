@@ -1330,4 +1330,8 @@ New dictionary:
     <string name="sans_app_accent_overrides_summary">Pick the color yourself for specific apps</string>
     <string name="sans_pick_app">Choose an app</string>
     <string name="sans_custom_color_marker">custom color</string>
+    <string name="sans_glass">Glass keys</string>
+    <string name="sans_glass_frosted">Frosted glass (app blurred behind)</string>
+    <string name="sans_glass_clear">Clear (app visible behind)</string>
+    <string name="sans_glass_off">Off (solid background)</string>
 </resources>
