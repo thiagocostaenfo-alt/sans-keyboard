@@ -52,7 +52,7 @@ object Defaults {
     const val PREF_SANS_ADAPTIVE_ACCENT = true
     const val PREF_SANS_APP_ACCENT_OVERRIDES = ""
     const val PREF_SANS_GLASS = "smoky"
-    const val PREF_SANS_KEY_SOUND = "mech"
+    const val PREF_SANS_KEY_SOUND = "creamy"
     const val PREF_THEME_COLORS = KeyboardTheme.THEME_SANS_LIGHT
     const val PREF_THEME_COLORS_NIGHT = KeyboardTheme.THEME_SANS_DARK
     const val PREF_THEME_KEY_BORDERS = true

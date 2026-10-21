@@ -570,6 +570,7 @@
     <string name="sans_glass_smoky">Vidro esfumaçado (painel fosco, teclas cinza)</string>
     <string name="sans_key_sound">Som das teclas</string>
     <string name="sans_key_sound_mech">Teclado mecânico (clique)</string>
-    <string name="sans_key_sound_thock">Teclado mecânico (abafado)</string>
+    <string name="sans_key_sound_creamy">ASMR cremoso (teclas macias)</string>
+    <string name="sans_key_sound_pop">ASMR bolha (pop suave)</string>
     <string name="sans_key_sound_system">Som do sistema</string>
 </resources>

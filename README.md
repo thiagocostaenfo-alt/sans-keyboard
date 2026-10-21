@@ -8,6 +8,8 @@ Baseado no [HeliBoard](https://github.com/Helium314/HeliBoard) (GPL-3.0). O READ
 
 - **Cor adaptativa por app**: a tecla Enter, a tecla pressionada, o Shift ativo e os destaques pegam a cor dominante do ícone do app aberto (verde no WhatsApp, laranja no Claude etc.). Pode ser desligada em *Configurações → Aparência*.
 - **Teclas de vidro**: pretas em cima e transparentes embaixo, com contorno fino de vidro (como ícones glass). O fundo do teclado é o próprio app: *vidro fosco* (app desfocado atrás, padrão) ou *transparente*. Em *Aparência → Teclas de vidro*.
+- **Vidro esfumaçado** (padrão): painel fosco com cantos arredondados, teclas cinza translúcidas que brilham na cor do app ao serem pressionadas.
+- **Sons ASMR**: *Cremoso* (padrão), *Bolha*, *Teclado mecânico* ou som do sistema, em *Preferências → Som das teclas*.
 - **Cor manual por app**: em *Aparência → Cor manual por app*, escolha um app e defina a cor. "Padrão" volta para a cor automática.
 - **Padrões estilo Samsung**: fileira de números fixa, símbolos pequenos no canto das teclas (toque longo), teclas arredondadas com fundo, temas "Sans claro" e "Sans escuro", cursor ao deslizar no espaço.
 - **Sugestão de colar**: o texto que você acabou de copiar aparece na barra de sugestões por alguns minutos; um toque cola.

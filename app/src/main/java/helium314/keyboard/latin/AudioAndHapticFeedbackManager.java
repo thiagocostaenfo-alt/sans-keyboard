@@ -82,15 +82,23 @@ public final class AudioAndHapticFeedbackManager {
                         .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
                         .build())
                 .build();
-        final boolean thock = "thock".equals(pack);
-        mKeySounds = new int[] {
-                mSoundPool.load(mContext, thock ? R.raw.sans_thock_key1 : R.raw.sans_mech_key1, 1),
-                mSoundPool.load(mContext, thock ? R.raw.sans_thock_key2 : R.raw.sans_mech_key2, 1),
-                mSoundPool.load(mContext, thock ? R.raw.sans_thock_key3 : R.raw.sans_mech_key3, 1),
+        // key1, key2, key3, space, enter, delete
+        final int[] res = switch (pack) {
+            case "pop" -> new int[] { R.raw.sans_pop_key1, R.raw.sans_pop_key2, R.raw.sans_pop_key3,
+                    R.raw.sans_pop_space, R.raw.sans_pop_enter, R.raw.sans_pop_delete };
+            case "mech" -> new int[] { R.raw.sans_mech_key1, R.raw.sans_mech_key2, R.raw.sans_mech_key3,
+                    R.raw.sans_mech_space, R.raw.sans_mech_enter, R.raw.sans_mech_delete };
+            default -> new int[] { R.raw.sans_creamy_key1, R.raw.sans_creamy_key2, R.raw.sans_creamy_key3,
+                    R.raw.sans_creamy_space, R.raw.sans_creamy_enter, R.raw.sans_creamy_delete };
         };
-        mSpaceSound = mSoundPool.load(mContext, thock ? R.raw.sans_thock_space : R.raw.sans_mech_space, 1);
-        mEnterSound = mSoundPool.load(mContext, thock ? R.raw.sans_thock_enter : R.raw.sans_mech_enter, 1);
-        mDeleteSound = mSoundPool.load(mContext, thock ? R.raw.sans_thock_delete : R.raw.sans_mech_delete, 1);
+        mKeySounds = new int[] {
+                mSoundPool.load(mContext, res[0], 1),
+                mSoundPool.load(mContext, res[1], 1),
+                mSoundPool.load(mContext, res[2], 1),
+        };
+        mSpaceSound = mSoundPool.load(mContext, res[3], 1);
+        mEnterSound = mSoundPool.load(mContext, res[4], 1);
+        mDeleteSound = mSoundPool.load(mContext, res[5], 1);
     }
 
     /** returns false if the system sound should be used instead */

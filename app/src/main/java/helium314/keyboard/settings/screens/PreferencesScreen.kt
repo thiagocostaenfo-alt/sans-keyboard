@@ -132,8 +132,9 @@ fun createPreferencesSettings(context: Context) = listOf(
         ListPreference(
             setting,
             listOf(
+                ctx.getString(R.string.sans_key_sound_creamy) to "creamy",
+                ctx.getString(R.string.sans_key_sound_pop) to "pop",
                 ctx.getString(R.string.sans_key_sound_mech) to "mech",
-                ctx.getString(R.string.sans_key_sound_thock) to "thock",
                 ctx.getString(R.string.sans_key_sound_system) to "system",
             ),
             Defaults.PREF_SANS_KEY_SOUND
