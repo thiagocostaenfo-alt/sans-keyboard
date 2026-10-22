@@ -1336,8 +1336,17 @@ New dictionary:
     <string name="sans_glass_off">Off (solid background)</string>
     <string name="sans_glass_smoky">Smoky glass (frosted panel, gray keys)</string>
     <string name="sans_key_sound">Key sound</string>
-    <string name="sans_key_sound_mech">Mechanical keyboard (clicky)</string>
-    <string name="sans_key_sound_creamy">ASMR creamy (soft lubed keys)</string>
-    <string name="sans_key_sound_pop">ASMR bubble (soft pop)</string>
     <string name="sans_key_sound_system">System sound</string>
+    <string name="sans_key_sound_thocky">Thocky (deep)</string>
+    <string name="sans_key_sound_creamy">Creamy (smooth ASMR)</string>
+    <string name="sans_key_sound_clacky">Clacky (bright)</string>
+    <string name="sans_key_sound_mx_blue">Cherry MX Blue (clicky)</string>
+    <string name="sans_key_sound_mx_brown">Cherry MX Brown (tactile)</string>
+    <string name="sans_key_sound_mx_red">Cherry MX Red (linear)</string>
+    <string name="sans_key_sound_holy_panda">Holy Panda</string>
+    <string name="sans_key_sound_alpaca">Alpaca</string>
+    <string name="sans_key_sound_topre">Topre (rubber dome)</string>
+    <string name="sans_key_sound_typewriter">Typewriter</string>
+    <string name="sans_key_sound_ibm">IBM buckling spring</string>
+    <string name="sans_key_sound_alps">Blue Alps</string>
 </resources>

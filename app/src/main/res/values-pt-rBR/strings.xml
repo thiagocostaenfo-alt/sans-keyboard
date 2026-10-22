@@ -569,8 +569,17 @@
     <string name="sans_glass_off">Desligado (fundo sólido)</string>
     <string name="sans_glass_smoky">Vidro esfumaçado (painel fosco, teclas cinza)</string>
     <string name="sans_key_sound">Som das teclas</string>
-    <string name="sans_key_sound_mech">Teclado mecânico (clique)</string>
-    <string name="sans_key_sound_creamy">ASMR cremoso (teclas macias)</string>
-    <string name="sans_key_sound_pop">ASMR bolha (pop suave)</string>
     <string name="sans_key_sound_system">Som do sistema</string>
+    <string name="sans_key_sound_thocky">Thocky (grave e encorpado)</string>
+    <string name="sans_key_sound_creamy">Creamy (macio, ASMR)</string>
+    <string name="sans_key_sound_clacky">Clacky (agudo e estalado)</string>
+    <string name="sans_key_sound_mx_blue">Cherry MX Blue (clique)</string>
+    <string name="sans_key_sound_mx_brown">Cherry MX Brown (tátil)</string>
+    <string name="sans_key_sound_mx_red">Cherry MX Red (linear)</string>
+    <string name="sans_key_sound_holy_panda">Holy Panda</string>
+    <string name="sans_key_sound_alpaca">Alpaca</string>
+    <string name="sans_key_sound_topre">Topre (borracha abafada)</string>
+    <string name="sans_key_sound_typewriter">Máquina de escrever</string>
+    <string name="sans_key_sound_ibm">IBM de mola</string>
+    <string name="sans_key_sound_alps">Alps azul</string>
 </resources>

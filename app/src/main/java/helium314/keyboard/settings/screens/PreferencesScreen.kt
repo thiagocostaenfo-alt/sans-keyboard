@@ -132,9 +132,18 @@ fun createPreferencesSettings(context: Context) = listOf(
         ListPreference(
             setting,
             listOf(
+                ctx.getString(R.string.sans_key_sound_thocky) to "thocky",
                 ctx.getString(R.string.sans_key_sound_creamy) to "creamy",
-                ctx.getString(R.string.sans_key_sound_pop) to "pop",
-                ctx.getString(R.string.sans_key_sound_mech) to "mech",
+                ctx.getString(R.string.sans_key_sound_clacky) to "clacky",
+                ctx.getString(R.string.sans_key_sound_mx_blue) to "mx_blue",
+                ctx.getString(R.string.sans_key_sound_mx_brown) to "mx_brown",
+                ctx.getString(R.string.sans_key_sound_mx_red) to "mx_red",
+                ctx.getString(R.string.sans_key_sound_holy_panda) to "holy_panda",
+                ctx.getString(R.string.sans_key_sound_alpaca) to "alpaca",
+                ctx.getString(R.string.sans_key_sound_topre) to "topre",
+                ctx.getString(R.string.sans_key_sound_typewriter) to "typewriter",
+                ctx.getString(R.string.sans_key_sound_ibm) to "ibm",
+                ctx.getString(R.string.sans_key_sound_alps) to "alps",
                 ctx.getString(R.string.sans_key_sound_system) to "system",
             ),
             Defaults.PREF_SANS_KEY_SOUND

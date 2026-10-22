@@ -84,12 +84,30 @@ public final class AudioAndHapticFeedbackManager {
                 .build();
         // key1, key2, key3, space, enter, delete
         final int[] res = switch (pack) {
-            case "pop" -> new int[] { R.raw.sans_pop_key1, R.raw.sans_pop_key2, R.raw.sans_pop_key3,
-                    R.raw.sans_pop_space, R.raw.sans_pop_enter, R.raw.sans_pop_delete };
-            case "mech" -> new int[] { R.raw.sans_mech_key1, R.raw.sans_mech_key2, R.raw.sans_mech_key3,
-                    R.raw.sans_mech_space, R.raw.sans_mech_enter, R.raw.sans_mech_delete };
-            default -> new int[] { R.raw.sans_creamy_key1, R.raw.sans_creamy_key2, R.raw.sans_creamy_key3,
+            case "creamy" -> new int[] { R.raw.sans_creamy_key1, R.raw.sans_creamy_key2, R.raw.sans_creamy_key3,
                     R.raw.sans_creamy_space, R.raw.sans_creamy_enter, R.raw.sans_creamy_delete };
+            case "clacky" -> new int[] { R.raw.sans_clacky_key1, R.raw.sans_clacky_key2, R.raw.sans_clacky_key3,
+                    R.raw.sans_clacky_space, R.raw.sans_clacky_enter, R.raw.sans_clacky_delete };
+            case "mx_blue" -> new int[] { R.raw.sans_mx_blue_key1, R.raw.sans_mx_blue_key2, R.raw.sans_mx_blue_key3,
+                    R.raw.sans_mx_blue_space, R.raw.sans_mx_blue_enter, R.raw.sans_mx_blue_delete };
+            case "mx_brown" -> new int[] { R.raw.sans_mx_brown_key1, R.raw.sans_mx_brown_key2, R.raw.sans_mx_brown_key3,
+                    R.raw.sans_mx_brown_space, R.raw.sans_mx_brown_enter, R.raw.sans_mx_brown_delete };
+            case "mx_red" -> new int[] { R.raw.sans_mx_red_key1, R.raw.sans_mx_red_key2, R.raw.sans_mx_red_key3,
+                    R.raw.sans_mx_red_space, R.raw.sans_mx_red_enter, R.raw.sans_mx_red_delete };
+            case "holy_panda" -> new int[] { R.raw.sans_holy_panda_key1, R.raw.sans_holy_panda_key2, R.raw.sans_holy_panda_key3,
+                    R.raw.sans_holy_panda_space, R.raw.sans_holy_panda_enter, R.raw.sans_holy_panda_delete };
+            case "alpaca" -> new int[] { R.raw.sans_alpaca_key1, R.raw.sans_alpaca_key2, R.raw.sans_alpaca_key3,
+                    R.raw.sans_alpaca_space, R.raw.sans_alpaca_enter, R.raw.sans_alpaca_delete };
+            case "topre" -> new int[] { R.raw.sans_topre_key1, R.raw.sans_topre_key2, R.raw.sans_topre_key3,
+                    R.raw.sans_topre_space, R.raw.sans_topre_enter, R.raw.sans_topre_delete };
+            case "typewriter" -> new int[] { R.raw.sans_typewriter_key1, R.raw.sans_typewriter_key2, R.raw.sans_typewriter_key3,
+                    R.raw.sans_typewriter_space, R.raw.sans_typewriter_enter, R.raw.sans_typewriter_delete };
+            case "ibm" -> new int[] { R.raw.sans_ibm_key1, R.raw.sans_ibm_key2, R.raw.sans_ibm_key3,
+                    R.raw.sans_ibm_space, R.raw.sans_ibm_enter, R.raw.sans_ibm_delete };
+            case "alps" -> new int[] { R.raw.sans_alps_key1, R.raw.sans_alps_key2, R.raw.sans_alps_key3,
+                    R.raw.sans_alps_space, R.raw.sans_alps_enter, R.raw.sans_alps_delete };
+            default -> new int[] { R.raw.sans_thocky_key1, R.raw.sans_thocky_key2, R.raw.sans_thocky_key3,
+                    R.raw.sans_thocky_space, R.raw.sans_thocky_enter, R.raw.sans_thocky_delete };
         };
         mKeySounds = new int[] {
                 mSoundPool.load(mContext, res[0], 1),

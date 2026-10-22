@@ -13,8 +13,8 @@ android {
         applicationId = "com.thiagocosta.sanskeyboard"
         minSdk = 21
         targetSdk = 37
-        versionCode = 4303
-        versionName = "1.3-sans"
+        versionCode = 4304
+        versionName = "1.4-sans"
         ndk {
             abiFilters.clear()
             abiFilters.addAll(listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64"))
