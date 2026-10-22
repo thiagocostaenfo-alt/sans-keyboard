@@ -67,8 +67,10 @@ object Glass {
         val pt = context.resources.configuration.locales[0].language == "pt"
         return when {
             blurAvailable(context) -> if (pt) "Desfoque: ativo (Android)" else "Blur: active (Android)"
-            SamsungBlur.available -> if (pt) "Desfoque: tentando o desfoque da Samsung (o do Android está desligado neste aparelho)"
-                else "Blur: trying Samsung blur (Android blur is off on this device)"
+            SamsungBlur.available -> (if (pt) "Desfoque do Android desligado neste aparelho. Samsung: " else "Android blur is off on this device. Samsung: ") +
+                (SamsungBlur.lastResult ?: if (pt) "ainda não testado (abra o teclado uma vez)" else "not tried yet (open the keyboard once)") +
+                (if (pt) ". Para o desfoque real, desligue Acessibilidade > Melhorias de visibilidade > \"Reduzir transparência e desfoque\" e a economia de energia."
+                 else ". For real blur, turn off Accessibility > Visibility enhancements > \"Reduce transparency and blur\" and power saving.")
             Build.VERSION.SDK_INT < Build.VERSION_CODES.S -> if (pt) "Desfoque: indisponível (precisa de Android 12+)" else "Blur: unavailable (needs Android 12+)"
             else -> if (pt) "Desfoque: desligado pelo sistema. Verifique a economia de energia e, nas Opções do desenvolvedor, \"Permitir desfoque no nível da janela\""
                 else "Blur: turned off by the system. Check power saving and, in Developer options, \"Allow window-level blurs\""
@@ -82,14 +84,15 @@ object Glass {
         if (!isEnabled(prefs)) return base
         // the frosted look only needs a light veil; without blur the app behind must be toned down more
         val blur = wantsAnyBlur(context, prefs)
+        val realBlur = wantsBlur(context, prefs) // Android's blur is known to work; Samsung's may be ignored
         if (mode(prefs) == MODE_SMOKY) {
-            val veil = if (blur) 0x8C141416.toInt() else 0xD9141416.toInt()
+            val veil = if (realBlur) 0x8C141416.toInt() else 0xC2141416.toInt()
             return GlassColors(base, veil, smoky = true, panelRadius = panelRadius(context), density = context.resources.displayMetrics.density,
-                samsungBlur = blur && !blurAvailable(context))
+                samsungBlur = blur && !blurAvailable(context), grain = !realBlur)
         }
-        val veil = if (blur) 0x47000000 else 0x8C000000.toInt()
+        val veil = if (realBlur) 0x47000000 else 0xA6101012.toInt()
         return GlassColors(base, veil, panelRadius = 0f, density = context.resources.displayMetrics.density,
-            samsungBlur = blur && !blurAvailable(context))
+            samsungBlur = blur && !blurAvailable(context), grain = !realBlur)
     }
 
     /**
@@ -130,6 +133,8 @@ class GlassColors(
     private val density: Float = 1f,
     /** Android's window blur is off: blur the keyboard frame with Samsung's blur instead */
     private val samsungBlur: Boolean = false,
+    /** without a working blur, a fine grain makes the veil read as frosted glass instead of tinted plastic */
+    private val grain: Boolean = false,
 ) : Colors {
     override val themeStyle: String get() = base.themeStyle
     override val hasKeyBorders: Boolean get() = true
@@ -174,12 +179,11 @@ class GlassColors(
 
     override fun setBackground(view: View, color: ColorType) {
         when (color) {
-            MAIN_BACKGROUND -> view.background = if (smoky) android.graphics.drawable.GradientDrawable().apply {
-                setColor(veil)
-                cornerRadius = panelRadius
-                setStroke((1f * density).toInt().coerceAtLeast(1), 0x50E6E6EB)
-            } else ColorDrawable(veil)
-                .also { if (samsungBlur) SamsungBlur.apply(view, (28 * density).toInt(), panelRadius) }
+            MAIN_BACKGROUND -> {
+                view.background = FrostedPanelDrawable(veil, if (smoky) panelRadius else 0f,
+                    if (smoky) 0x50E6E6EB else 0, density, grain)
+                if (samsungBlur) SamsungBlur.apply(view, (28 * density).toInt(), if (smoky) panelRadius else 0f)
+            }
             STRIP_BACKGROUND -> if (smoky && view is ImageView) {
                 view.background = ToolbarCircleDrawable(base.get(ACTION_KEY_BACKGROUND), density)
             } else {
@@ -381,6 +385,9 @@ object SamsungBlur {
 
     val available: Boolean get() = infoClass != null && builderClass != null && setBlurInfo != null
 
+    /** what happened the last time the blur was applied, shown in the settings */
+    @Volatile var lastResult: String? = null
+
     private fun windowMode(): Int = try {
         infoClass!!.getField("BLUR_MODE_WINDOW").getInt(null)
     } catch (_: Throwable) { 0 }
@@ -407,8 +414,71 @@ object SamsungBlur {
             if (cornerRadius > 0f) call(builder, listOf("setBackgroundCornerRadius"), cornerRadius, Float::class.javaPrimitiveType!!)
             val info = builderClass!!.getMethod("build").invoke(builder)
             // apply after layout, as One UI does
-            view.post { try { setBlurInfo!!.invoke(view, info) } catch (_: Throwable) { } }
+            view.post {
+                lastResult = try {
+                    setBlurInfo!!.invoke(view, info)
+                    "aceito pelo sistema (se o fundo não ficou fosco, a One UI ignora o pedido para apps de terceiros)"
+                } catch (e: Throwable) {
+                    val cause = (e as? java.lang.reflect.InvocationTargetException)?.targetException ?: e
+                    "recusado (" + cause.javaClass.simpleName + (cause.message?.let { ": " + it.take(80) } ?: "") + ")"
+                }
+            }
             true
-        } catch (_: Throwable) { false }
+        } catch (e: Throwable) {
+            lastResult = "recusado (" + e.javaClass.simpleName + ")"
+            false
+        }
+    }
+}
+
+/** keyboard background: translucent veil, optional rim and a fine static grain that reads as frosted glass */
+class FrostedPanelDrawable(
+    @ColorInt private val veil: Int,
+    private val radius: Float,
+    @ColorInt private val rimColor: Int,
+    private val density: Float,
+    private val grain: Boolean,
+) : Drawable() {
+    private val fill = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = veil }
+    private val rim = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeWidth = 1f * density; color = rimColor }
+    private val grainPaint = Paint().apply { if (grain) shader = android.graphics.BitmapShader(noise, Shader.TileMode.REPEAT, Shader.TileMode.REPEAT) }
+    private val rect = RectF()
+
+    override fun draw(canvas: Canvas) {
+        rect.set(bounds)
+        canvas.drawRoundRect(rect, radius, radius, fill)
+        if (grain) canvas.drawRoundRect(rect, radius, radius, grainPaint)
+        // a soft light sheen at the top, like light catching a glass pane
+        val sheen = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            shader = LinearGradient(0f, rect.top, 0f, rect.top + 60 * density, 0x14FFFFFF, 0x00FFFFFF, Shader.TileMode.CLAMP)
+        }
+        canvas.drawRoundRect(rect, radius, radius, sheen)
+        if (Color.alpha(rimColor) > 0) {
+            val h = rim.strokeWidth / 2f
+            rect.inset(h, h)
+            canvas.drawRoundRect(rect, radius - h, radius - h, rim)
+        }
+    }
+
+    override fun setAlpha(alpha: Int) = Unit
+    override fun setColorFilter(colorFilter: ColorFilter?) = Unit
+    @Deprecated("Deprecated in Java")
+    override fun getOpacity() = PixelFormat.TRANSLUCENT
+
+    companion object {
+        /** 96x96 tile of soft white/black specks, generated once */
+        private val noise: android.graphics.Bitmap by lazy {
+            val size = 96
+            val rnd = java.util.Random(7)
+            val px = IntArray(size * size) {
+                val v = rnd.nextGaussian()
+                when {
+                    v > 1.2 -> Color.argb((18 + rnd.nextInt(14)), 255, 255, 255)
+                    v < -1.2 -> Color.argb((16 + rnd.nextInt(12)), 0, 0, 0)
+                    else -> Color.argb(6, 255, 255, 255)
+                }
+            }
+            android.graphics.Bitmap.createBitmap(px, size, size, android.graphics.Bitmap.Config.ARGB_8888)
+        }
     }
 }
