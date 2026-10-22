@@ -540,6 +540,8 @@ public class LatinIME extends InputMethodService implements
 
     @Override
     public void onCreate() {
+        // Sans Keyboard: a translucent window theme, needed for the frosted glass blur (must be set before super.onCreate)
+        setTheme(R.style.SansInputMethodTheme);
         mSettings.startListener();
         KeyboardIconsSet.Companion.getInstance().loadIcons(this);
         mRichImm = RichInputMethodManager.getInstance();

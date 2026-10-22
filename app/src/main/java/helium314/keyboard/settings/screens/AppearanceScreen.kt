@@ -156,7 +156,8 @@ fun createAppearanceSettings(context: Context) = listOf(
                 ctx.getString(R.string.sans_glass_clear) to Glass.MODE_CLEAR,
                 ctx.getString(R.string.sans_glass_off) to Glass.MODE_OFF,
             ),
-            Defaults.PREF_SANS_GLASS
+            Defaults.PREF_SANS_GLASS,
+            description = Glass.status(ctx)
         ) { KeyboardSwitcher.getInstance().setThemeNeedsReload() }
     },
     Setting(context, Settings.PREF_SANS_ADAPTIVE_ACCENT, R.string.sans_adaptive_accent, R.string.sans_adaptive_accent_summary) {

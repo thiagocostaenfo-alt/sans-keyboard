@@ -58,19 +58,38 @@ object Glass {
     fun wantsBlur(context: Context, prefs: SharedPreferences) =
         (mode(prefs) == MODE_FROSTED || mode(prefs) == MODE_SMOKY) && blurAvailable(context)
 
+    /** frosted modes that blur something: Android's window blur, or else Samsung's own blur */
+    fun wantsAnyBlur(context: Context, prefs: SharedPreferences) =
+        (mode(prefs) == MODE_FROSTED || mode(prefs) == MODE_SMOKY) && (blurAvailable(context) || SamsungBlur.available)
+
+    /** short status for the settings screen, so a missing blur can be explained */
+    fun status(context: Context): String {
+        val pt = context.resources.configuration.locales[0].language == "pt"
+        return when {
+            blurAvailable(context) -> if (pt) "Desfoque: ativo (Android)" else "Blur: active (Android)"
+            SamsungBlur.available -> if (pt) "Desfoque: tentando o desfoque da Samsung (o do Android está desligado neste aparelho)"
+                else "Blur: trying Samsung blur (Android blur is off on this device)"
+            Build.VERSION.SDK_INT < Build.VERSION_CODES.S -> if (pt) "Desfoque: indisponível (precisa de Android 12+)" else "Blur: unavailable (needs Android 12+)"
+            else -> if (pt) "Desfoque: desligado pelo sistema. Verifique a economia de energia e, nas Opções do desenvolvedor, \"Permitir desfoque no nível da janela\""
+                else "Blur: turned off by the system. Check power saving and, in Developer options, \"Allow window-level blurs\""
+        }
+    }
+
     fun panelRadius(context: Context) = 28f * context.resources.displayMetrics.density
 
     @JvmStatic
     fun apply(context: Context, prefs: SharedPreferences, base: Colors): Colors {
         if (!isEnabled(prefs)) return base
         // the frosted look only needs a light veil; without blur the app behind must be toned down more
-        val blur = wantsBlur(context, prefs)
+        val blur = wantsAnyBlur(context, prefs)
         if (mode(prefs) == MODE_SMOKY) {
             val veil = if (blur) 0x8C141416.toInt() else 0xD9141416.toInt()
-            return GlassColors(base, veil, smoky = true, panelRadius = panelRadius(context), density = context.resources.displayMetrics.density)
+            return GlassColors(base, veil, smoky = true, panelRadius = panelRadius(context), density = context.resources.displayMetrics.density,
+                samsungBlur = blur && !blurAvailable(context))
         }
         val veil = if (blur) 0x47000000 else 0x8C000000.toInt()
-        return GlassColors(base, veil)
+        return GlassColors(base, veil, panelRadius = 0f, density = context.resources.displayMetrics.density,
+            samsungBlur = blur && !blurAvailable(context))
     }
 
     /**
@@ -109,6 +128,8 @@ class GlassColors(
     private val smoky: Boolean = false,
     private val panelRadius: Float = 0f,
     private val density: Float = 1f,
+    /** Android's window blur is off: blur the keyboard frame with Samsung's blur instead */
+    private val samsungBlur: Boolean = false,
 ) : Colors {
     override val themeStyle: String get() = base.themeStyle
     override val hasKeyBorders: Boolean get() = true
@@ -158,6 +179,7 @@ class GlassColors(
                 cornerRadius = panelRadius
                 setStroke((1f * density).toInt().coerceAtLeast(1), 0x50E6E6EB)
             } else ColorDrawable(veil)
+                .also { if (samsungBlur) SamsungBlur.apply(view, (28 * density).toInt(), panelRadius) }
             STRIP_BACKGROUND -> if (smoky && view is ImageView) {
                 view.background = ToolbarCircleDrawable(base.get(ACTION_KEY_BACKGROUND), density)
             } else {
@@ -344,4 +366,49 @@ class ToolbarCircleDrawable(@ColorInt private val accent: Int, private val densi
     override fun setColorFilter(colorFilter: ColorFilter?) = Unit
     @Deprecated("Deprecated in Java")
     override fun getOpacity() = PixelFormat.TRANSLUCENT
+}
+
+/**
+ * Samsung's own real-time blur (One UI), used when Android's cross-window blur is disabled on the device.
+ * The API is undocumented, so every member is looked up by reflection and any failure just leaves no blur.
+ */
+object SamsungBlur {
+    private val infoClass: Class<*>? = try { Class.forName("android.view.SemBlurInfo") } catch (_: Throwable) { null }
+    private val builderClass: Class<*>? = try { Class.forName("android.view.SemBlurInfo\$Builder") } catch (_: Throwable) { null }
+    private val setBlurInfo: java.lang.reflect.Method? = try {
+        if (infoClass == null) null else View::class.java.getMethod("semSetBlurInfo", infoClass)
+    } catch (_: Throwable) { null }
+
+    val available: Boolean get() = infoClass != null && builderClass != null && setBlurInfo != null
+
+    private fun windowMode(): Int = try {
+        infoClass!!.getField("BLUR_MODE_WINDOW").getInt(null)
+    } catch (_: Throwable) { 0 }
+
+    private fun call(target: Any, names: List<String>, arg: Any, type: Class<*>): Boolean {
+        for (n in names) {
+            try { builderClass!!.getMethod(n, type).invoke(target, arg); return true } catch (_: Throwable) { }
+        }
+        return false
+    }
+
+    /** returns true if the blur info was accepted by the view */
+    fun apply(view: View, radius: Int, cornerRadius: Float): Boolean {
+        if (!available) return false
+        return try {
+            val mode = windowMode()
+            val builder = try {
+                builderClass!!.getConstructor(Int::class.javaPrimitiveType).newInstance(mode)
+            } catch (_: Throwable) {
+                builderClass!!.getConstructor().newInstance().also { call(it, listOf("setBlurMode"), mode, Int::class.javaPrimitiveType!!) }
+            }
+            call(builder, listOf("setRadius", "setBlurRadius"), radius, Int::class.javaPrimitiveType!!)
+            call(builder, listOf("setBackgroundColor"), 0x26000000, Int::class.javaPrimitiveType!!)
+            if (cornerRadius > 0f) call(builder, listOf("setBackgroundCornerRadius"), cornerRadius, Float::class.javaPrimitiveType!!)
+            val info = builderClass!!.getMethod("build").invoke(builder)
+            // apply after layout, as One UI does
+            view.post { try { setBlurInfo!!.invoke(view, info) } catch (_: Throwable) { } }
+            true
+        } catch (_: Throwable) { false }
+    }
 }
